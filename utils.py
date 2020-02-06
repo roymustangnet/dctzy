@@ -86,7 +86,7 @@ def merage_file(folder, outputfile):
 def format_print(result, title = ''):
     '''
     按照一定的格式输出想要查看的结果
-    :param result:
+    :param result: 单个权重的计算结果
     :return:
     '''
     if title:
@@ -95,7 +95,12 @@ def format_print(result, title = ''):
         print("{}:{}".format(i[0], i[1]))
     print('='*30)
 
-def result_intersection(results):
+def get_result_intersection(results):
+    '''
+    获得计算结果的交集
+    :param results: 计算结果
+    :return: 交集
+    '''
     new_results = list()
     for r in results:
         new_set = set()
@@ -105,6 +110,13 @@ def result_intersection(results):
     return set.intersection(*new_results)
 
 def compute_term_rank(analyzer, topK, poses = ['n']):
+    '''
+    按照不同的及算法方法，对词的重要程度进行排序
+    :param analyzer: 分析器
+    :param topK: 截断值
+    :param poses: 要选取的词性
+    :return:
+    '''
     print('Computing TF-IDF...')
     tf_idf_tag = analyzer.get_tf_idf_rank(poses, topK)
     print('Computing TextRank...')
@@ -113,16 +125,29 @@ def compute_term_rank(analyzer, topK, poses = ['n']):
     freq_tag = analyzer.get_freq_rank(poses, topK)
     return [tf_idf_tag, txtrank_tag, freq_tag]
 
-def display_term_rank_result(result):
-    format_print(result[0], 'TF-IDF results:')
-    format_print(result[1], 'TextRank results:')
-    format_print(result[2], 'Freqency results:')
+def display_term_rank_result(result, show_detail = False):
+    '''
+    展示词权重排序的结果
+    :param result: 计算结果，其顺序分别为TF-IDF, TextRank, Frequency
+    :param show_detail: 是否显示每种结果的详细计算结果
+    :return:
+    '''
+    if show_detail:
+        # 是否显示细节，即所有排序的结果
+        format_print(result[0], 'TF-IDF results:')
+        format_print(result[1], 'TextRank results:')
+        format_print(result[2], 'Freqency results:')
+
     df_tfidf = pd.DataFrame([dict(result[0])]).T
     df_tfidf.columns = ['tfidf']
     df_txtrank = pd.DataFrame([dict(result[1])]).T
     df_txtrank.columns = ['textrank']
     df_freq = pd.DataFrame([dict(result[2])]).T
     df_freq.columns = ['freq']
-    print('top {} intersection are:{}'.format(len(result[0]), result_intersection(result)))
+    df = df_tfidf.join(df_txtrank).join(df_freq)
+    intersection = get_result_intersection(result)
+    print('top {} intersection are:'.format(len(result[0])))
+    print(df.loc[intersection])
+    # return df.loc[intersection]
 
 
