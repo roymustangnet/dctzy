@@ -11,7 +11,7 @@ import utils
 停用词表来源：
 https://github.com/goto456/stopwords
 '''
-class OutpatientVolAnalyzer:
+class OutpatientDescriptionAnalyzer:
     '''
     从DataFrame的特定字段中
     统计所有词项的频率
