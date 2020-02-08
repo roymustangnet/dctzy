@@ -7,7 +7,7 @@ import jieba
 REMOVED_WORDS = ['复查', '复诊', '取药', '开药', 'fuchsa', 'fuccha', '挂错号', '买药']
 PAT = r'^(?:(?!代诊).)*(' + '|'.join(REMOVED_WORDS) + r')(?:(?!代诊).)*$'
 
-def batch_read(cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC'],
+def batch_read(cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
                is_filter:bool = True,
                filter_cols:list = ['ILLNESS_DESC'],
                filter_exps:list = [PAT]):
@@ -27,7 +27,7 @@ def batch_read(cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNE
 
 
 def read(file:str,
-         cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC'],
+         cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
          is_filter:bool = True,
          filter_cols:list = ['ILLNESS_DESC'],
          filter_exps:list = [PAT]):
