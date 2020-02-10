@@ -1,10 +1,9 @@
 import os
-from collections import Counter
+import collections
 import pandas as pd
 import jieba
 import jieba.posseg
 import jieba.analyse
-import utils
 
 
 '''
@@ -30,7 +29,7 @@ class OutpatientDescriptionAnalyzer:
         self._data = data
         self._focused_fields = focused_fields
         self._stopwords = self.__get_stopwords(stopwords_file)
-        self._c = Counter()
+        self._c = collections.Counter()
         jieba.load_userdict(user_dict)
         # jieba.analyse.load_userdict(user_dict)
 
@@ -113,7 +112,7 @@ class OutpatientDescriptionAnalyzer:
         if not(stopwords_file and os.path.exists(stopwords_file)):
             folder = './stopwords'
             stopwords_file = './stopwords.txt'
-            utils.merage_file('./stopwords', stopwords_file)
+            self.__merage_file('./stopwords', stopwords_file)
             # 设置jieba的停用词
             jieba.analyse.set_stop_words(stopwords_file)
         return (line.strip() for line in open(stopwords_file, encoding='utf-8').readlines())
@@ -133,6 +132,18 @@ class OutpatientDescriptionAnalyzer:
                     print(row)
                 sentence += row
         return sentence
+
+    def __merage_file(self, folder, outputfile):
+        '''
+        合并文件
+        :param folder:原始文件所在的文件夹
+        :param outputfile:需要输出的文件的位置
+        :return:
+        '''
+        with open(outputfile, 'w', encoding='utf-8') as newfile:
+            for f in os.listdir(folder):
+                with open(os.path.join(folder, f), 'r',encoding='utf-8') as readfile:
+                    newfile.write(readfile.read())
 
 
 

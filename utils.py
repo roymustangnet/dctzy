@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import pandas as pd
-import jieba
-
+import pickle
+import warnings
 
 REMOVED_WORDS = ['复查', '复诊', '取药', '开药', 'fuchsa', 'fuccha', '挂错号', '买药']
 PAT = r'^(?:(?!代诊).)*(' + '|'.join(REMOVED_WORDS) + r')(?:(?!代诊).)*$'
@@ -17,13 +17,22 @@ def batch_read(cols:list=['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNE
     :param is_filter: 是否过滤数据，默认过滤
     :return:
     '''
-    data_1 = read('./data/2016年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
-                  filter_cols = filter_cols, filter_exps = filter_exps)
-    data_2 = read('./data/2017年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
-                  filter_cols = filter_cols, filter_exps = filter_exps)
-    data_3 = read('./data/2018年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
-                  filter_cols = filter_cols, filter_exps = filter_exps)
-    return pd.concat([data_1, data_2, data_3], ignore_index=False)
+    warnings.warn('This function is Expired. Please use OriginalData.batch_read')
+    dump_file = './data/data.dmp'
+    if not os.path.exists(dump_file):
+        data_1 = read('./data/2016年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
+                      filter_cols = filter_cols, filter_exps = filter_exps)
+        data_2 = read('data/2017年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
+                      filter_cols = filter_cols, filter_exps = filter_exps)
+        data_3 = read('data/2018年心身科门诊数据.csv', cols = cols, is_filter= is_filter,
+                      filter_cols = filter_cols, filter_exps = filter_exps)
+        data = pd.concat([data_1, data_2, data_3], ignore_index=False)
+        with open(dump_file, 'wb') as f:
+            pickle.dump(data, f)
+    else:
+        with open(dump_file, 'rb') as f:
+            data = pickle.load(f)
+    return data
 
 
 def read(file:str,
@@ -39,25 +48,27 @@ def read(file:str,
     :param filter_exps: 需要过滤字段的正则表达式
     :return: 读取的数据
     '''
+    warnings.warn('This function is Expired. Please use OriginalData.read')
     try:
         data = pd.read_csv(file, encoding='utf-8')
         for c in cols:
             data[c].fillna('', inplace = True)
         if is_filter:
             for col, exp in zip(filter_cols, filter_exps):
-                data = filter(data, col, exp)
+                data = my_filter(data, col, exp)
         return data[cols]
     except Exception as e:
         print(e.message)
 
 
-def filter(data:pd.DataFrame, col:str, kw_exp:str):
+def my_filter(data:pd.DataFrame, col:str, kw_exp:str):
     '''
     :param data: 要过滤的数据，数据类型为DataFrame
     :param col: 要过滤的字段
     :param kw_exp: 匹配字符的正则表达式
     :return: 过滤后的数据
     '''
+    warnings.warn('This function is Expired. Please use OriginalData.filter_data')
     return data[~data[col].str.contains(kw_exp)]
 
 
@@ -149,5 +160,4 @@ def display_term_rank_result(result, show_detail = False):
     print('top {} intersection are:'.format(len(result[0])))
     print(df.loc[intersection])
     # return df.loc[intersection]
-
 
