@@ -16,14 +16,15 @@ class OriginalData():
     def batch_read(cols: list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
                    is_filter: bool = True,
                    filter_cols: list = ['ILLNESS_DESC'],
-                   filter_exps: list = [_PAT]):
+                   filter_exps: list = [_PAT],
+                   dump_file: str = './data/data.dmp'):
         '''
         批量读取数据
         :param cols: 需要读取的字段
         :param is_filter: 是否过滤数据，默认过滤
         :return:
         '''
-        dump_file = './data/data.dmp'
+
         if not os.path.exists(dump_file):
             data_1 = OriginalData.read('./data/2016年心身科门诊数据.csv', cols=cols, is_filter=is_filter,
                           filter_cols=filter_cols, filter_exps=filter_exps)
@@ -79,10 +80,17 @@ class OriginalData():
 
     @staticmethod
     def clean_data(data:pd.DataFrame):
+        '''
+        数据清洗
+        :param data: 需要清洗的数据
+        :return: 清洗后的数据
+        '''
         d = copy.deepcopy(data)
         d.drop(d[d['SEX'] == '1'].index, inplace=True)
         d.drop(d[d['SEX'] == '2'].index, inplace=True)
-        d['SEX'] = d['SEX'].apply(lambda x: 'male' if x == '男' else 'female')
+        d['SEX'] = d['SEX'].apply(lambda x: 'Male' if x == '男' else 'Female')
         assert len(d[d['SEX'] == '1'].index) == 0 and len(d[d['SEX'] == '2'].index) == 0
         return d
 
+if __name__ == '__main__':
+    print(len(OriginalData.batch_read()))

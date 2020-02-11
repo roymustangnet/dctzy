@@ -145,7 +145,7 @@ class VolumeAnalyzer:
                      'schizophrenia',
                      'bipolar_disorder']
         for k, name in zip(ill_keywords, ill_names):
-            result['ILLNESS'] = result['DIAG_DESC'].apply(lambda x: name if k in x else '')
+            result[name] = result['DIAG_DESC'].apply(lambda x: '1' if k in x else '0')
         result['ILLNESS'] = result['DIAG_DESC'].apply(extract_first_ill)
         return result
 
