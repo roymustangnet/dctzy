@@ -23,23 +23,21 @@ class Columns:
 
 
 class VolumeAnalyzer:
-    # def __init__(self, data):
-    #     self._data = data
-    #     assert len(set(self._data.columns) & {'VISIT_DATE', 'SEX', 'AGE'}) == 3
-        # self._volume = VolumeAnalyzer.get_outpatient_volume(data)
-        # self._volume = VolumeAnalyzer.add_time_info(self._volume)
-        # self._volume = VolumeAnalyzer.add_holiday_info(self._volume)
-
-    # def get_volume(self):
-    #     return self._volume
 
     # data必须具备的columns
-    _ORIGINAL_DATA_MUST_HAVE_COLS = {'VISIT_DATE', 'SEX', 'AGE', 'DIAG_DESC'}
+    __ORIGINAL_DATA_MUST_HAVE_COLS = {'VISIT_DATE', 'SEX', 'AGE', 'DIAG_DESC'}
+    __ill_keywords = ['抑郁', '焦虑', '精神分裂', '双相']
+    __ill_names = ['depression',
+                 'anxiety',
+                 'schizophrenia',
+                 'bipolar_disorder']
+    @property
+    def ill_names(cls):
+        return cls.__ill_names
 
-
-
-    @staticmethod
-    def get_outpatient_volume(data:pd.DataFrame,
+    @classmethod
+    def get_outpatient_volume(cls,
+                              data:pd.DataFrame,
                               class_cols:list = ['VISIT_DATE', 'SEX'],
                               age_bins:list = [0, 6, 18, 24, 40, 50, 70, 130]):
         '''
@@ -49,13 +47,13 @@ class VolumeAnalyzer:
         :return: 分类的统计门诊量
         '''
 
-        assert len(set(data.columns) & VolumeAnalyzer._ORIGINAL_DATA_MUST_HAVE_COLS) == len(VolumeAnalyzer._ORIGINAL_DATA_MUST_HAVE_COLS)
+        assert len(set(data.columns) & cls._ORIGINAL_DATA_MUST_HAVE_COLS) == len(cls._ORIGINAL_DATA_MUST_HAVE_COLS)
 
         result = copy.deepcopy(data)
 
         # 添加各类信息
-        result = VolumeAnalyzer.add_time_info(result)
-        result = VolumeAnalyzer.add_holiday_info(result)
+        result = cls.add_time_info(result)
+        result = cls.add_holiday_info(result)
 
         # 分类
         result = result.groupby(by = class_cols, as_index=False).size()
@@ -65,7 +63,8 @@ class VolumeAnalyzer:
         return result
 
     @staticmethod
-    def add_time_info(input_vol, time_col=Columns.Date):
+    def add_time_info(input_vol:pd.DataFrame,
+                      time_col=Columns.Date):
         '''
         为门诊量数据添加星期特征
         :param vol:门诊量数据
@@ -107,11 +106,11 @@ class VolumeAnalyzer:
         return grouped['volume'].agg(staticmethod)
 
     @staticmethod
-    def process_outpatient_detail(data: pd.DataFrame):
-        assert len(set(data.columns) & VolumeAnalyzer._ORIGINAL_DATA_MUST_HAVE_COLS) == len(VolumeAnalyzer._ORIGINAL_DATA_MUST_HAVE_COLS)
+    def process_outpatient_detail(cls, data: pd.DataFrame):
+        assert len(set(data.columns) & cls._ORIGINAL_DATA_MUST_HAVE_COLS) == len(cls._ORIGINAL_DATA_MUST_HAVE_COLS)
         result = copy.deepcopy(data)
-        # result = VolumeAnalyzer.pod_clean_data(result)
-        result = VolumeAnalyzer.pod_add_diagdesc(result)
+        # result = cls.pod_clean_data(result)
+        result = cls.pod_add_diagdesc(result)
         return result
 
     # @staticmethod
@@ -123,8 +122,8 @@ class VolumeAnalyzer:
     #     assert len(d[d['SEX'] == '1'].index) == 0 and len(d[d['SEX'] == '2'].index) == 0
     #     return d
 
-    @staticmethod
-    def pod_add_diagdesc(data:pd.DataFrame):
+    @classmethod
+    def pod_add_diagdesc(cls, data:pd.DataFrame):
         '''
         pod表示process Outpatient detail，是用于处理原始数据的
         该函数主要用于从原始的门诊量数据提取出疾病信息，目前仅处理四类疾病：
@@ -136,15 +135,10 @@ class VolumeAnalyzer:
         :return:
         '''
         def extract_first_ill(desc):
-            index = [desc.find(x) if desc.find(x)>=0 else 10000 for x in ill_keywords]
-            return ill_names[index.index(min(index))]
+            index = [desc.find(x) if desc.find(x)>=0 else 10000 for x in cls._ill_keywords]
+            return cls._ill_names[index.index(min(index))]
         result = copy.deepcopy(data)
-        ill_keywords = ['抑郁', '焦虑', '精神分裂', '双相']
-        ill_names = ['depression',
-                     'anxiety',
-                     'schizophrenia',
-                     'bipolar_disorder']
-        for k, name in zip(ill_keywords, ill_names):
+        for k, name in zip(cls._ill_keywords, cls._ill_names):
             result[name] = result['DIAG_DESC'].apply(lambda x: '1' if k in x else '0')
         result['ILLNESS'] = result['DIAG_DESC'].apply(extract_first_ill)
         return result

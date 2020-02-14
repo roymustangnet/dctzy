@@ -14,7 +14,6 @@ from matplotlib.font_manager import FontProperties
 
 
 if __name__ == "__main__":
-
     data = OriginalData.OriginalData.batch_read()
     data = VolumeAnalyzer.process_outpatient_detail(data)
 
@@ -27,12 +26,28 @@ if __name__ == "__main__":
     vol = vol.drop(vol[vol[Columns.OutpatientVol]==0].index)
     print(vol.columns)
 
-    # myfont = FontProperties(fname=r'/Users/Library/Fonts/SourceHanSansSC-Normal.otf')
-    sns.boxplot(x=Columns.Age,
-                y=Columns.OutpatientVol,
-                hue=Columns.Sex,
-                data=vol)
+    myfont = FontProperties(fname=r'C:\Windows\Fonts\simhei.ttf', size=14)
+    sns.set(font=myfont.get_name(), style='white')
+
+    g = sns.boxplot(x=Columns.Age,
+                    y=Columns.OutpatientVol,
+                    hue=Columns.Sex,
+                    data=vol,
+                    )
+    plt.xticks(rotation=45)
     plt.show()
+    g.get_figure().savefig('boxplot_volumn_age_sex.png', dpi=600, bbox_inches='tight')
+
+    g = sns.violinplot(x=Columns.Age,
+                       y=Columns.OutpatientVol,
+                       hue=Columns.Sex,
+                       data=vol,
+                       split=True)
+
+    plt.xticks(rotation=45)
+    plt.show()
+    g.get_figure().savefig('violinplot_volumn_age_sex.png', dpi=600, bbox_inches='tight')
+
 
 
 
