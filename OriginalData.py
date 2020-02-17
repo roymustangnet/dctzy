@@ -12,6 +12,28 @@ import copy
 class OriginalData():
     _REMOVED_WORDS = ['复查', '复诊', '取药', '开药', 'fuchsa', 'fuccha', '挂错号', '买药']
     _PAT = r'^(?:(?!代诊).)*(' + '|'.join(_REMOVED_WORDS) + r')(?:(?!代诊).)*$'
+    @classmethod
+    def read_csv_files(cls,
+                   files:list,
+                   cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE']):
+        '''
+        批量读取文件，主要用于GUI界面
+        :return:读取后的data数据
+        '''
+        datas = list()
+        for file in files:
+            datas.append(OriginalData.read(file, cols))
+        data = pd.concat(datas, ignore_index=False)
+        return data
+
+    @classmethod
+    def read_dump_file(cls,
+                       file,
+                       cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE']):
+        with open(file, 'rb') as f:
+            data = pickle.load(f)
+        return data
+
     @staticmethod
     def batch_read(cols: list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
                    is_filter: bool = True,

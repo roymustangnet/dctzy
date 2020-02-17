@@ -271,7 +271,7 @@ class VolumeAnalyzer:
     #     d = copy.deepcopy(data)
     #     d.drop(d[d['SEX'] == '1'].index, inplace=True)
     #     d.drop(d[d['SEX'] == '2'].index, inplace=True)
-    #     d['SEX'] = d['SEX'].apply(lambda x: 'male' if x == '男' else 'female')
+    #     d['SEX'] = d['SEX'].apply(lambda xname: 'male' if xname == '男' else 'female')
     #     assert len(d[d['SEX'] == '1'].index) == 0 and len(d[d['SEX'] == '2'].index) == 0
     #     return d
 

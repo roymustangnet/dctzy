@@ -11,9 +11,12 @@ import OriginalData
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+from MainGUI import Main_GUI
 
 
 if __name__ == "__main__":
+    window = Main_GUI()
+    window.run()
     # data = OriginalData.OriginalData.batch_read()
     # data = VolumeAnalyzer.process_outpatient_detail(data)
     #
@@ -29,7 +32,7 @@ if __name__ == "__main__":
     # myfont = FontProperties(fname=r'C:\Windows\Fonts\simhei.ttf', size=14)
     # sns.set(font=myfont.get_name(), style='white')
     #
-    # g = sns.boxplot(x=Columns.Age,
+    # g = sns.boxplot(xname=Columns.Age,
     #                 y=Columns.OutpatientVol,
     #                 hue=Columns.Sex,
     #                 data=vol,
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     # plt.show()
     # g.get_figure().savefig('boxplot_volumn_age_sex.png', dpi=600, bbox_inches='tight')
     #
-    # g = sns.violinplot(x=Columns.Age,
+    # g = sns.violinplot(xname=Columns.Age,
     #                    y=Columns.OutpatientVol,
     #                    hue=Columns.Sex,
     #                    data=vol,
@@ -47,11 +50,6 @@ if __name__ == "__main__":
     # plt.xticks(rotation=45)
     # plt.show()
     # g.get_figure().savefig('violinplot_volumn_age_sex.png', dpi=600, bbox_inches='tight')
-    class_cols = [Columns.Date, Columns.Dist_pre_hld, Columns.Sex]
-    data = OriginalData.OriginalData.batch_read()
-    data = VolumeAnalyzer.process_outpatient_detail(data)
-    vol = VolumeAnalyzer.get_outpatient_volume(data, class_cols)
-    print(vol.tail())
 
 
 
