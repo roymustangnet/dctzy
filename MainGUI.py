@@ -86,13 +86,15 @@ class Main_GUI():
             if col1==col2==Columns.Age:
                 messagebox.showinfo('Error', '两列不能都为AGE')
                 return
-            stat_conf_window.destroy()
+
             if col1 == Columns.Age:
-                self.__plot(col1, col2, age_edit_box1.get())
+                age_bins = age_edit_box1.get()
             elif col1 == Columns.Age:
-                self.__plot(col1, col2, age_edit_box2.get())
+                age_bins = age_edit_box2.get()
             else:
-                self.__plot(col1, col2)
+                age_bins = list()
+            stat_conf_window.destroy()
+            self.__plot(col1, col2, age_bins)
 
 
         stat_conf_window = Toplevel()
@@ -138,6 +140,8 @@ class Main_GUI():
 
         confirm_button = tk.Button(stat_conf_window, text="开始绘图", command=confirm_button_click)
         confirm_button.grid(column=1, row=2, padx=8, pady=4)
+
+
 
     def __open_csv_files(self):
         '''

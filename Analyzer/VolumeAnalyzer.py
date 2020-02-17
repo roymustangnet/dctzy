@@ -56,8 +56,9 @@ class VolumeAnalyzer:
         assert len(set(data.columns) & cls.__ORIGINAL_DATA_MUST_HAVE_COLS) == len(cls.__ORIGINAL_DATA_MUST_HAVE_COLS)
         result = copy.deepcopy(data)
 
+        remove_age_cuts_cls_cols = [col for col in class_cols if type(col) == str]
         # 添加各类信息
-        if len(set(class_cols) & {Columns.Week,
+        if len(set(remove_age_cuts_cls_cols) & {Columns.Week,
                                   Columns.Is_holiday,
                                   Columns.Year,
                                   Columns.Month,
@@ -66,7 +67,7 @@ class VolumeAnalyzer:
             result = cls.add_time_info(result)
             result = cls.add_holiday_info(result)
 
-        if len(set(class_cols) & {Columns.Len_after_hld,
+        if len(set(remove_age_cuts_cls_cols) & {Columns.Len_after_hld,
                                   Columns.Len_pre_hld,
                                   Columns.Dist_pre_hld,
                                   Columns.Dist_after_hld}) >0:
