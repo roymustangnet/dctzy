@@ -10,11 +10,12 @@ from tkinter import ttk
 from tkinter import Toplevel
 from tkinter import Label
 from OriginalData import OriginalData
-from Analyzer.VolumeAnalyzer import Columns
-from Analyzer.VolumeAnalyzer import VolumeAnalyzer
+from analyzer.Analyzer import Columns
+from analyzer.Analyzer import VolumeAnalyzer
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import config
 from matplotlib.font_manager import FontProperties
 
 
@@ -29,9 +30,12 @@ class Main_GUI():
         self.__vol_data = pd.DataFrame()
         self.__init_menu()
         self.__init_table()
+        self.__init_config()
+        self.__profile = config.Config.load()
 
     def run(self):
         self.top.mainloop()
+
 
     def __init_table(self):
         self.scrollbar = tk.Scrollbar(self.top, )
@@ -43,8 +47,13 @@ class Main_GUI():
     def __init_menu(self):
         menubar = tk.Menu(self.top)
         file_menu = tk.Menu(self.top)
-        for item, func in zip(['打开CSV', '打开序列化文件', '另存为...'],
-                              (self.__open_csv_files, self.__open_dump_file, self.__save_file)):
+        for item, func in zip(['打开CSV',
+                               '打开序列化文件',
+                               '另存为...',
+                               ],
+                              (self.__open_csv_files,
+                               self.__open_dump_file,
+                               self.__save_file)):
             file_menu.add_command(label=item, command=func)
         menubar.add_cascade(label="文件", menu=file_menu)
 
@@ -54,11 +63,11 @@ class Main_GUI():
         menubar.add_cascade(label="数据处理", menu=process_menu)
         self.top['menu'] = menubar
 
-    def __statistic(self):
-        if len(self.__original_data) == 0:
-            messagebox.showinfo('提示信息','尚未读取数据，请加载原始的门诊量数据')
-            return
-        self.__init_stat_config_window()
+        help_menu = tk.Menu(self.top)
+        for item, func in zip(['配置'], [self.__config]):
+            help_menu.add_command(label=item, command=func)
+        menubar.add_cascade(label="help", menu=help_menu)
+        self.top['menu'] = menubar
 
     def __init_stat_config_window(self):
         '''
@@ -89,7 +98,7 @@ class Main_GUI():
 
             if col1 == Columns.Age:
                 age_bins = age_edit_box1.get()
-            elif col1 == Columns.Age:
+            elif col2 == Columns.Age:
                 age_bins = age_edit_box2.get()
             else:
                 age_bins = list()
@@ -141,6 +150,17 @@ class Main_GUI():
         confirm_button = tk.Button(stat_conf_window, text="开始绘图", command=confirm_button_click)
         confirm_button.grid(column=1, row=2, padx=8, pady=4)
 
+    def __init_config(self):
+        pass
+
+    def __statistic(self):
+        if len(self.__original_data) == 0:
+            messagebox.showinfo('提示信息','尚未读取数据，请加载原始的门诊量数据')
+            return
+        self.__init_stat_config_window()
+
+
+
     def __save_file(self):
         if len(self.__original_data) == 0:
             messagebox.showinfo('','尚未加载数据')
@@ -154,6 +174,7 @@ class Main_GUI():
             OriginalData.save_dump_file(self.__original_data, file_path)
         else:
             return
+
     def __open_csv_files(self):
         '''
         读取多个csv文件
@@ -228,5 +249,8 @@ class Main_GUI():
                         )
         plt.xticks(rotation=45)
         plt.show()
+
+    def __config(self):
+        pass
 
 

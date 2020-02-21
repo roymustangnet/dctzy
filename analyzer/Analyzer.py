@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# @FileName  :VolumeAnalyzer.py
-# @Time      :2020/2/7 10:46
+# @FileName  :Analyzer.py
+# @Time      :2020/2/21 18:44
 # @Author    :supakito
-import pandas as pd
-import numpy as np
-import copy
-import chinese_calendar as cc
 import warnings
 import datetime
+import os
+import copy
+import collections
+
+import pandas as pd
+import numpy as np
+import chinese_calendar as cc
+import jieba
+import jieba.posseg
+import jieba.analyse
 
 
 class Columns:
@@ -80,8 +86,9 @@ class VolumeAnalyzer:
 
         return result
 
-    @staticmethod
-    def add_time_info(input_vol:pd.DataFrame,
+    @classmethod
+    def add_time_info(cls,
+                      input_vol:pd.DataFrame,
                       time_col=Columns.Date):
         '''
         为门诊量数据添加星期特征
@@ -96,8 +103,8 @@ class VolumeAnalyzer:
         vol[Columns.Day] = pd.to_datetime(vol[time_col]).dt.day
         return vol
 
-    @staticmethod
-    def add_holiday_info(vol):
+    @classmethod
+    def add_holiday_info(cls, vol:pd.DataFrame):
         '''
         为数据添加是否为节假日的信息
         :param vol: 原始的数据
@@ -253,11 +260,150 @@ class VolumeAnalyzer:
             result[name] = result['DIAG_DESC'].apply(lambda x: '1' if k in x else '0')
         result['ILLNESS'] = result['DIAG_DESC'].apply(extract_first_ill)
         return result
-#
-# if __name__ == '__main__':
-#     import OriginalData
-#     data = OriginalData.OriginalData.batch_read()
-#     data = VolumeAnalyzer.process_outpatient_detail(data)
-#     vol = VolumeAnalyzer.get_outpatient_volume(data)
-#     print(vol.head())
 
+
+class OutpatientDescriptionAnalyzer:
+    '''
+    从DataFrame的特定字段中
+    统计所有词项的频率
+    '''
+    # 用户词典的位置，用于分词，不过好像没有什么效果
+    __user_dict = './mydicts.txt'
+    # 停用词表的位置，来源于https://github.com/goto456/stopwords
+    __stopwords_file = './stopwords.txt'
+
+    @classmethod
+    def get_freq_rank(cls,
+                      data:pd.DataFrame,
+                      focused_fields:list,
+                      poses:list=['n', 'a'],
+                      topK:int=20, clear=False):
+        '''
+        获得词频最高的词项
+        :param topK: 前n项的数量
+        :param poses: 词性，可选择的包括
+        n	普通名词	f	方位名词	s	处所名词	t	时间
+        nr	人名	ns	地名	nt	机构名	nw	作品名
+        nz	其他专名	v	普通动词	vd	动副词	vn	名动词
+        a	形容词	ad	副形词	an	名形词	d	副词
+        m	数量词	q	量词	r	代词	p	介词
+        c	连词	u	助词	xc	其他虚词	w	标点符号
+        PER	人名	LOC	地名	ORG	机构名	TIME	时间
+        :return: 词频排名靠前的前N个词项
+        '''
+        stopwords = cls.__get_stopwords(cls.__stopwords_file)
+        c = collections.Counter()
+        for field in focused_fields:
+            for row in data[field]:
+                cls.__get_words(row, c, poses, stopwords)
+        return c.most_common(topK)
+        # if clear or len(self._c) == 0:
+        #     self._c.clear()
+        #     for field in self._focused_fields:
+        #         for row in self._data[field]:
+        #             self.__get_words(row, poses)
+        # return self._c.most_common(topK)
+
+    @classmethod
+    def get_tf_idf_rank(cls,
+                        data:pd.DataFrame,
+                        focused_fields:list,
+                        poses:list=['n', 'a'],
+                        topK:int=20):
+        '''
+        获得TF-IDF的排名靠前的词项
+        :param topK: 前n项的数量
+        :param poses: 词性，可选择的包括
+        n	普通名词	f	方位名词	s	处所名词	t	时间
+        nr	人名	ns	地名	nt	机构名	nw	作品名
+        nz	其他专名	v	普通动词	vd	动副词	vn	名动词
+        a	形容词	ad	副形词	an	名形词	d	副词
+        m	数量词	q	量词	r	代词	p	介词
+        c	连词	u	助词	xc	其他虚词	w	标点符号
+        PER	人名	LOC	地名	ORG	机构名	TIME	时间
+        :return: TF-IDF排名靠前的前N个词项
+        '''
+        sentence = cls.__get_sentence(data, focused_fields)
+        return jieba.analyse.extract_tags(sentence, topK=topK, withWeight=True, allowPOS=poses)
+
+    @classmethod
+    def get_textrank_rank(cls, poses:list=['n', 'a'], topK=20):
+        '''
+        获得TextRank最高的词项
+        :param topK: 前n项的数量
+        :param poses: 词性，可选择的包括
+        n	普通名词	f	方位名词	s	处所名词	t	时间
+        nr	人名	ns	地名	nt	机构名	nw	作品名
+        nz	其他专名	v	普通动词	vd	动副词	vn	名动词
+        a	形容词	ad	副形词	an	名形词	d	副词
+        m	数量词	q	量词	r	代词	p	介词
+        c	连词	u	助词	xc	其他虚词	w	标点符号
+        PER	人名	LOC	地名	ORG	机构名	TIME	时间
+        :return: TextRank排名靠前的前N个词项
+        '''
+        sentence = cls.__get_sentence()
+        return jieba.analyse.textrank(sentence, topK=topK, withWeight=True, allowPOS=poses)
+
+    @staticmethod
+    def __get_sentence(data, focused_fields):
+        '''
+        将所有关心的字段中的文字合并在一起
+        :return:
+        '''
+        sentence = ''
+        for field in focused_fields:
+            for row in data[field]:
+                try:
+                    if not row.endswith('.|。|，|,'):
+                        row += '。'
+                except Exception as e:
+                    print(row)
+                sentence += row
+        return sentence
+
+    @staticmethod
+    def __merage_file(folder, outputfile):
+        '''
+        合并文件
+        :param folder:原始文件所在的文件夹
+        :param outputfile:需要输出的文件的位置
+        :return:
+        '''
+        with open(outputfile, 'w', encoding='utf-8') as newfile:
+            for f in os.listdir(folder):
+                with open(os.path.join(folder, f), 'r',encoding='utf-8') as readfile:
+                    newfile.write(readfile.read())
+
+    @classmethod
+    def __get_stopwords(cls, stopwords_file):
+        '''
+        获得停用词字典
+        同时设置jieba分析器的停用词表
+        :param stopwords_file:停用词表的文件
+        :return:停用词字典
+        '''
+        if not(stopwords_file and os.path.exists(stopwords_file)):
+            folder = './stopwords'
+            stopwords_file = './stopwords.txt'
+            cls.__merage_file('./stopwords', stopwords_file)
+            # 设置jieba的停用词
+            jieba.analyse.set_stop_words(stopwords_file)
+        return (line.strip() for line in open(stopwords_file, encoding='utf-8').readlines())
+
+    @classmethod
+    def __get_words(cls,
+                    txt,
+                    counter:collections.Counter,
+                    poses:list=['n', 'a'],
+                    stopwords:list=[]):
+        '''
+        对文档进行分词
+        :param txt: 输入的文本
+        :param poses: 需要保留的词性
+        :param stopwords: 停用词
+        :return:
+        '''
+        words = jieba.posseg.cut(txt)
+        for w in words:
+            if w.word not in stopwords and (not poses or w.flag in poses):
+                counter[w.word] += 1

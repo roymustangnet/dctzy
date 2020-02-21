@@ -5,8 +5,8 @@
 # @Author    :supakito
 
 from utils import *
-from Analyzer.VolumeAnalyzer import VolumeAnalyzer
-from Analyzer.VolumeAnalyzer import Columns
+from analyzer.Analyzer import VolumeAnalyzer
+from analyzer.Analyzer import Columns
 import OriginalData
 import seaborn as sns
 import matplotlib.pyplot as plt
