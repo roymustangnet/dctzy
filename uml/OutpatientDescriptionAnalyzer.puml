@@ -1,0 +1,17 @@
+@startuml
+class OutpatientDescriptionAnalyzer{
+- _data:pd.DataFrame
+- _focused_fields:list<string>
+- _stopwords:list<string>
+- _c:collections.Counter
+- __init__(self, data, focused_fields, user_dict, stopwords_file)
++ get_freq_rank(self, poses:list<string>, topK, clear)
++ get_tf_idf_rank(self, poses:list<string>, topK)
++ get_textrank_rank(self, poses:list<string>, topK)
+- __get_words(self, txt, poses:list)
+- __get_stopwords(self, stopwords_file)
+- __get_sentence(self)
+- __merage_file(self, folder, outputfile)
+}
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+
+class VolumeAnalyzer{
+{field}- __ORIGINAL_DATA_MUST_HAVE_COLS:list
+- __ill_keywords:list
+- __ill_names:list
+{method}+ pd.DataFrame get_outpatient_volume(cls, data, class_cols)
++ pd.DataFrame add_time_info(input_vol, time_col)
++ add_holiday_info(vol)
++ add_holiday_ext_info(cls, data)
++ process_outpatient_detail(cls, data)
++ pod_add_diagdesc(cls, data)
+- __supplementary_days(cls, data)
+- __get_datetime_range(cls, current, offset)
+- __get_offset_date(cls, current, offset)
+}
+
+
+@enduml

@@ -200,49 +200,6 @@ class VolumeAnalyzer:
         re_date = current + offset
         return re_date
 
-    @classmethod
-    def add_dist_pre_holiday(cls, data: pd.DataFrame):
-        '''
-        当天之前假日的距离
-        :param data:
-        :return:
-        '''
-        result = copy.deepcopy(data)
-        result[Columns.Dist_pre_hld] = 0
-        result['Shift'] = result[Columns.is_holiday].shift(1)
-        return result
-
-
-    @classmethod
-    def add_dist_after_holiday(cls, data: pd.DataFrame):
-        '''
-        当天之后假日的距离
-        :param data:
-        :return:
-        '''
-        result = copy.deepcopy(data)
-        return result
-
-    @classmethod
-    def add_len_of_recent_pre_holiday(cls, data: pd.DataFrame):
-        '''
-        当天之前假期的长度
-        :param data:
-        :return:
-        '''
-        result = copy.deepcopy(data)
-        return result
-
-    @classmethod
-    def add_len_of_recent_after_holiday(cls, data: pd.DataFrame):
-        '''
-        当天之后假期的长度
-        :param data:
-        :return:
-        '''
-        result = copy.deepcopy(data)
-        return result
-
     @staticmethod
     def get_grouped_result(vol_data: pd.DataFrame, grouped_col: str, staticmethod=np.mean):
         '''

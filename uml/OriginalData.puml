@@ -1,0 +1,14 @@
+@startuml
+
+class OriginalData{
+- _REMOVED_WORDS:list
+- _PAT:string
++read_csv_files(cls, files, cols)
++read_dump_file(cls, file, cols)
++ batch_read(cols, is_filter, filter_cols, filter_exps, dump_file)
++ read(file, cols, is_filter, filter_cols, filter_exps, dump_file)
++ filter_data(data, col, kw_exp)
++ clean_data(data)
+}
+
+@enduml

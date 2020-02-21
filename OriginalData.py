@@ -34,6 +34,16 @@ class OriginalData():
             data = pickle.load(f)
         return data
 
+    @classmethod
+    def save_csv_file(cls, data:pd.DataFrame, file_path):
+        data.to_csv(file_path, encoding='utf-8', index=False)
+
+    @classmethod
+    def save_dump_file(cls, data:pd.DataFrame, file_path):
+        with open(file_path, 'wb') as f:
+            pickle.dump(data, f)
+
+
     @staticmethod
     def batch_read(cols: list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
                    is_filter: bool = True,
@@ -110,7 +120,8 @@ class OriginalData():
         d = copy.deepcopy(data)
         d.drop(d[d['SEX'] == '1'].index, inplace=True)
         d.drop(d[d['SEX'] == '2'].index, inplace=True)
-        d['SEX'] = d['SEX'].apply(lambda x: 'Male' if x == '男' else 'Female')
+        d.loc[d['SEX'] == '女','SEX'] = 'Female'
+        d.loc[d['SEX'] == '男', 'SEX'] = 'Male'
         assert len(d[d['SEX'] == '1'].index) == 0 and len(d[d['SEX'] == '2'].index) == 0
         return d
 

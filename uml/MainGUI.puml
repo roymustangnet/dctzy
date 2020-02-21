@@ -1,0 +1,18 @@
+@startuml
+
+class MainGUI{
+- __original_data
+- __vol_data
++ top
++ run(self)
+-__init_table(self)
+-__init_menu(self)
+-__statistic(self)
+-__init_stat_config_window(self)
+-__open_csv_files(self)
+-__open_dump_file(self)
+-__show_data(self, data, col_length)
+-__plot(self, xname, group, agebins)
+}
+
+@enduml

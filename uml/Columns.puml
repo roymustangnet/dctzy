@@ -1,0 +1,19 @@
+@startuml
+
+enum Columns {
+    Date = 'VISIT_DATE'
+    Sex = 'SEX'
+    Age = 'AGE'
+    OutpatientVol = 'VOLUME'
+    Year = 'YEAR'
+    Month = 'MONTH'
+    Day = 'DAY'
+    Week = 'WEEK'
+    Is_holiday = 'IS_HOLIDAY'
+    Illness = 'ILLNESS'
+    Len_pre_hld = 'LEN_PRE_HOLIDAY'
+    Len_after_hld = 'LEN_AFTER_HOLIDAY'
+    Dist_pre_hld = 'DIST_PRE_HOLIDAY'
+    Dist_after_hld = 'DIST_AFTER_HOLIDAY'
+}
+@enduml

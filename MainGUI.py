@@ -43,8 +43,8 @@ class Main_GUI():
     def __init_menu(self):
         menubar = tk.Menu(self.top)
         file_menu = tk.Menu(self.top)
-        for item, func in zip(['打开CSV', '打开序列化文件'],
-                              (self.__open_csv_files, self.__open_dump_file)):
+        for item, func in zip(['打开CSV', '打开序列化文件', '另存为...'],
+                              (self.__open_csv_files, self.__open_dump_file, self.__save_file)):
             file_menu.add_command(label=item, command=func)
         menubar.add_cascade(label="文件", menu=file_menu)
 
@@ -141,8 +141,19 @@ class Main_GUI():
         confirm_button = tk.Button(stat_conf_window, text="开始绘图", command=confirm_button_click)
         confirm_button.grid(column=1, row=2, padx=8, pady=4)
 
-
-
+    def __save_file(self):
+        if len(self.__original_data) == 0:
+            messagebox.showinfo('','尚未加载数据')
+            return
+        file_path = filedialog.asksaveasfilename(title=u'保存文件',
+                                                 filetypes=[('dump','dmp'), ("csv", ".csv")],
+                                                 defaultextension='.dmp')
+        if file_path.endswith('.csv'):
+            OriginalData.save_csv_file(self.__original_data, file_path)
+        elif file_path.endswith('.dmp'):
+            OriginalData.save_dump_file(self.__original_data, file_path)
+        else:
+            return
     def __open_csv_files(self):
         '''
         读取多个csv文件
@@ -152,7 +163,7 @@ class Main_GUI():
                                             filetypes=[('csv', '*.csv')])
         if files and len(files) > 0:
             self.__original_data = OriginalData.read_csv_files(files)
-            self.__show_data()
+            self.__show_data(self.__original_data)
 
     def __open_dump_file(self):
         '''
@@ -180,6 +191,7 @@ class Main_GUI():
             self.table.heading(c, text=c)
 
         for i in self.table.get_children():
+            # 清空原有的数据内容
             self.table.delete(i)
         for index, row in data.iterrows():
             self.table.insert('', 'end', values=row.to_list())
