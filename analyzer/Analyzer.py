@@ -327,7 +327,7 @@ class OutpatientDescriptionAnalyzer:
         return jieba.analyse.extract_tags(sentence, topK=topK, withWeight=True, allowPOS=poses)
 
     @classmethod
-    def get_textrank_rank(cls, poses:list=['n', 'a'], topK=20):
+    def get_textrank_rank(cls, data:pd.DataFrame, focused_fields, poses:list=['n', 'a'], topK=20):
         '''
         获得TextRank最高的词项
         :param topK: 前n项的数量
@@ -341,7 +341,7 @@ class OutpatientDescriptionAnalyzer:
         PER	人名	LOC	地名	ORG	机构名	TIME	时间
         :return: TextRank排名靠前的前N个词项
         '''
-        sentence = cls.__get_sentence()
+        sentence = cls.__get_sentence(data, focused_fields)
         return jieba.analyse.textrank(sentence, topK=topK, withWeight=True, allowPOS=poses)
 
     @staticmethod

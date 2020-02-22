@@ -15,7 +15,11 @@ class Config:
         pass
     @classmethod
     def json2obj(cls, json_data):
-        return Profile(json_data['_focused_fields'])
+        return Profile(focused_fields =json_data['focused_fields'],
+                       nlp_fields = json_data['nlp_fields'],
+                       poses = json_data['poses'],
+                       is_filter = json_data['is_filter'],
+                       topK = json_data['topK'])
 
     @classmethod
     def store(cls, data):
@@ -25,18 +29,35 @@ class Config:
     @classmethod
     def load(cls):
         if not os.path.exists(cls.__config_file):
-            cls.store(Profile(['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE']))
+            cls.store(Profile(focused_fields = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
+                              nlp_fields = ['DIAG_DESC', 'ILLNESS_DESC'],
+                              poses = ['n', 'a'],
+                              is_filter = True,
+                              topK = 20))
         with open(cls.__config_file) as json_file:
             try:
-                profile = json.load(json_file)
+                profile = cls.json2obj(json.load(json_file))
             except:
-                profile = Profile([])
+                profile = Profile([],[])
             return profile
 
 class Profile:
-    def __init__(self, focused_fields):
-        self._focused_fields = focused_fields
+    def __init__(self,
+                 focused_fields,
+                 nlp_fields,
+                 poses:list = ['n', 'a'],
+                 is_filter = True,
+                 topK = 20):
+        # 需要保留的列名
+        self.focused_fields = focused_fields
+        # 能够进行NLP分析的列名
+        self.nlp_fields = nlp_fields
+        # 需要统计的词性
+        self.poses = poses
+        # 是否过滤取药、复诊的人员
+        self.is_filter = is_filter
+        # 选择最高的词
+        self.topK = topK
 
 if __name__ == '__main__':
-    p = Profile(['a','b','c'])
     print(Config.load())

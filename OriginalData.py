@@ -14,25 +14,31 @@ class OriginalData():
     _PAT = r'^(?:(?!代诊).)*(' + '|'.join(_REMOVED_WORDS) + r')(?:(?!代诊).)*$'
     @classmethod
     def read_csv_files(cls,
-                   files:list,
-                   cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE']):
+                       files:list,
+                       cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
+                       is_filter:bool=True):
         '''
         批量读取文件，主要用于GUI界面
         :return:读取后的data数据
         '''
         datas = list()
         for file in files:
-            datas.append(OriginalData.read(file, cols))
+            datas.append(OriginalData.read(file, cols, is_filter))
         data = pd.concat(datas, ignore_index=False)
         return data
 
     @classmethod
     def read_dump_file(cls,
                        file,
-                       cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE']):
+                       cols:list = ['PATIENT_ID', 'VISIT_DATE', 'SEX', 'DIAG_DESC', 'ILLNESS_DESC', 'AGE'],
+                       is_filter=True):
         with open(file, 'rb') as f:
             data = pickle.load(f)
-        return data
+        if is_filter:
+            col = 'ILLNESS_DESC'
+            exp = cls._PAT
+            data = OriginalData.filter_data(data, col, exp)
+        return data[cols]
 
     @classmethod
     def save_csv_file(cls, data:pd.DataFrame, file_path):
@@ -96,7 +102,7 @@ class OriginalData():
             data = OriginalData.clean_data(data)
             return data[cols]
         except Exception as e:
-            print(e.message)
+            print(e)
 
     @staticmethod
     def filter_data(data: pd.DataFrame,
@@ -108,7 +114,7 @@ class OriginalData():
         :param kw_exp: 匹配字符的正则表达式
         :return: 过滤后的数据
         '''
-        return data[~data[col].str.contains(kw_exp)]
+        return data[~data[col].str.contains(kw_exp, na=False)]
 
     @staticmethod
     def clean_data(data:pd.DataFrame):

@@ -9,15 +9,18 @@ from tkinter import filedialog
 from tkinter import ttk
 from tkinter import Toplevel
 from tkinter import Label
+from tkinter import Checkbutton
+from tkinter import IntVar
 from OriginalData import OriginalData
 from analyzer.Analyzer import Columns
 from analyzer.Analyzer import VolumeAnalyzer
+from analyzer.Analyzer import OutpatientDescriptionAnalyzer
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import config
 from matplotlib.font_manager import FontProperties
-
+import functools
 
 class Main_GUI():
     def __init__(self):
@@ -30,7 +33,7 @@ class Main_GUI():
         self.__vol_data = pd.DataFrame()
         self.__init_menu()
         self.__init_table()
-        self.__init_config()
+        # self.__init_config()
         self.__profile = config.Config.load()
 
     def run(self):
@@ -58,13 +61,13 @@ class Main_GUI():
         menubar.add_cascade(label="文件", menu=file_menu)
 
         process_menu = tk.Menu(self.top)
-        for item, func in zip(['分组统计'], [self.__statistic]):
+        for item, func in zip(['分组统计', '关键字分析'], [self.__statistic, self.__stat_word]):
             process_menu.add_command(label=item, command=func)
         menubar.add_cascade(label="数据处理", menu=process_menu)
         self.top['menu'] = menubar
 
         help_menu = tk.Menu(self.top)
-        for item, func in zip(['配置'], [self.__config]):
+        for item, func in zip(['配置'], [self.__init_config]):
             help_menu.add_command(label=item, command=func)
         menubar.add_cascade(label="help", menu=help_menu)
         self.top['menu'] = menubar
@@ -127,8 +130,8 @@ class Main_GUI():
 
         lb1 = Label(stat_conf_window, text="分组统计参数1（x轴）：")
         lb1.grid(column=0, row=0, padx=8, pady=4)
-        lb1 = Label(stat_conf_window, text="分组统计参数2（分组，可不选）：")
-        lb1.grid(column=0, row=1, padx=8, pady=4)
+        lb2 = Label(stat_conf_window, text="分组统计参数2（分组，可不选）：")
+        lb2.grid(column=0, row=1, padx=8, pady=4)
 
         self._comvalue_1 = tk.StringVar()
         dropdownlist_1 = ttk.Combobox(stat_conf_window, textvariable=self._comvalue_1, state='readonly')  # 初始化
@@ -150,16 +153,140 @@ class Main_GUI():
         confirm_button = tk.Button(stat_conf_window, text="开始绘图", command=confirm_button_click)
         confirm_button.grid(column=1, row=2, padx=8, pady=4)
 
+    def __init_stat_word_window(self):
+        '''
+        对词进行分析
+        :return:
+        '''
+        def confirm_button_click():
+            cols = edit_box1.get().split()
+            poses = edit_box2.get().split()
+            self.__profile.nlp_fields = cols
+            self.__profile.poses = poses
+            config.Config.store(self.__profile)
+            f = cb_freq_v.get()
+            tf = cb_tfidf_v.get()
+            tr = cb_textrank_v.get()
+            if f+tf+tr == 0:
+                messagebox.showinfo('提示', '必须选择一种权重计算方式')
+                return
+            else:
+                results = list()
+                if f:
+                    result = OutpatientDescriptionAnalyzer.get_freq_rank(data = self.__original_data,
+                                                                         focused_fields = self.__profile.nlp_fields,
+                                                                         poses = self.__profile.poses,
+                                                                         topK = self.__profile.topK)
+                    df = pd.DataFrame([dict(result)]).T
+                    df.columns = ['freq']
+                    results.append(df)
+                if tf:
+                    result = OutpatientDescriptionAnalyzer.get_tf_idf_rank(data = self.__original_data,
+                                                                           focused_fields = self.__profile.nlp_fields,
+                                                                           poses = self.__profile.poses,
+                                                                           topK = self.__profile.topK)
+                    df = pd.DataFrame([dict(result)]).T
+                    df.columns = ['tfidf']
+                    results.append(df)
+                if tr:
+                    result = OutpatientDescriptionAnalyzer.get_textrank_rank(data = self.__original_data,
+                                                                             focused_fields = self.__profile.nlp_fields,
+                                                                             poses = self.__profile.poses,
+                                                                             topK = self.__profile.topK)
+                    df = pd.DataFrame([dict(result)]).T
+                    df.columns = ['textrank']
+                    results.append(df)
+
+                df_r = pd.concat(results, axis=1)
+                file_path = filedialog.asksaveasfilename(title=u'保存文件',
+                                                 filetypes=[("csv", ".csv")],
+                                                 defaultextension='.csv')
+                df_r.to_csv(file_path, encoding='utf-8')
+                stat_word_conf_window.destroy()
+
+        stat_word_conf_window = Toplevel()
+        stat_word_conf_window.title('关键字统计')
+        stat_word_conf_window.geometry('450x250')
+        stat_word_conf_window.resizable(0, 0)
+        Label(stat_word_conf_window, text="需要统计关键字的字段：").grid(column=0, row=0, padx=8, pady=4)
+
+        edit_box1 = tk.Entry(stat_word_conf_window)
+        edit_box1.insert(0, self.__profile.nlp_fields)
+        edit_box1.grid(column=2, row=0, )
+
+        Label(stat_word_conf_window, text="需要统计的词性：").grid(column=0, row=1, padx=8, pady=4)
+        edit_box2 = tk.Entry(stat_word_conf_window)
+        edit_box2.insert(0, self.__profile.poses)
+        edit_box2.grid(column=2, row=1, )
+
+        Label(stat_word_conf_window, text="需要统计的词性：").grid(column=0, row=1, padx=8, pady=4)
+        edit_box2 = tk.Entry(stat_word_conf_window)
+        edit_box2.insert(0, self.__profile.poses)
+        edit_box2.grid(column=2, row=1, )
+
+        cb_freq_v = IntVar()
+        cb_freq = Checkbutton(stat_word_conf_window, text="Frequency",
+                              variable=cb_freq_v, onvalue = 1, offvalue = 0)
+        cb_freq.select()
+        cb_freq.grid(column=0, row=3, padx=8, pady=4)
+
+        cb_tfidf_v = IntVar()
+        cb_tfidf = Checkbutton(stat_word_conf_window, text="TF-IDF",
+                               variable=cb_tfidf_v, onvalue = 1, offvalue = 0)
+        cb_tfidf.select()
+        cb_tfidf.grid(column=0, row=4, padx=8, pady=4)
+
+        cb_textrank_v = IntVar()
+        cb_textrank = Checkbutton(stat_word_conf_window, text="TextRank",
+                                  variable=cb_textrank_v, onvalue = 1, offvalue = 0)
+        cb_textrank.select()
+        cb_textrank.grid(column=0, row=5, padx=8, pady=4)
+
+
+
+        confirm_button = tk.Button(stat_word_conf_window, text="确定", command=confirm_button_click)
+        confirm_button.grid(column=1, row=6, padx=8, pady=4)
+
     def __init_config(self):
-        pass
+        def confirm_button_click():
+            focused_fields = edit_box1.get()
+            is_filter = True if cb_isfilter_v.get() else False
+            self.__profile.focused_fields = focused_fields
+            self.__profile.is_filter = is_filter
+            config.Config.store(self.__profile)
+            config_window.destroy()
+            
+        config_window = Toplevel()
+        config_window.title('系统配置')
+        config_window.geometry('450x250')
+        config_window.resizable(0, 0)
+
+        Label(config_window, text="需要加载的列：").grid(column=0, row=0, padx=8, pady=4)
+        edit_box1 = tk.Entry(config_window)
+        edit_box1.insert(0, self.__profile.focused_fields)
+        edit_box1.grid(column=1, row=0, padx=8, pady=4)
+
+        cb_isfilter_v = IntVar()
+        cb_isfilter = Checkbutton(config_window, text="TF-IDF",
+                               variable=cb_isfilter_v, onvalue=1, offvalue=0)
+        cb_isfilter.select()
+        cb_isfilter.grid(column=0, row=2, padx=8, pady=4)
+
+        confirm_button = tk.Button(config_window, text="确定", command=confirm_button_click)
+        confirm_button.grid(column=1, row=3, padx=8, pady=4)
 
     def __statistic(self):
         if len(self.__original_data) == 0:
-            messagebox.showinfo('提示信息','尚未读取数据，请加载原始的门诊量数据')
+            messagebox.showinfo('提示信息', '尚未读取数据，请加载原始的门诊量数据')
             return
         self.__init_stat_config_window()
 
 
+    def __stat_word(self):
+        if len(self.__original_data) == 0:
+            messagebox.showinfo('提示信息', '尚未读取数据，请加载原始的门诊量数据')
+            return
+        self.__init_stat_word_window()
 
     def __save_file(self):
         if len(self.__original_data) == 0:
@@ -183,7 +310,9 @@ class Main_GUI():
         files = filedialog.askopenfilenames(title='读取数据文件',
                                             filetypes=[('csv', '*.csv')])
         if files and len(files) > 0:
-            self.__original_data = OriginalData.read_csv_files(files)
+            self.__original_data = OriginalData.read_csv_files(files,
+                                                               cols = self.__profile.focused_fields,
+                                                               is_filter = self.__profile.is_filter)
             self.__show_data(self.__original_data)
 
     def __open_dump_file(self):
@@ -194,7 +323,9 @@ class Main_GUI():
         file = filedialog.askopenfilename(title='读取序列化的数据文件',
                                           filetypes=[('dump',('*.dump', '*.dmp'))])
         if file:
-            self.__original_data = OriginalData.read_dump_file(file)
+            self.__original_data = OriginalData.read_dump_file(file,
+                                                               cols=self.__profile.focused_fields,
+                                                               is_filter = self.__profile.is_filter)
             self.__show_data(self.__original_data)
 
     def __show_data(self,
@@ -252,5 +383,16 @@ class Main_GUI():
 
     def __config(self):
         pass
+
+def data_not_empt(data):
+    def my_decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if len(data) == 0:
+                messagebox.showinfo('提示信息', '尚未读取数据，请加载原始的门诊量数据')
+                return
+            func(*args, **kwargs)
+        return wrapper
+    return my_decorator
 
 
