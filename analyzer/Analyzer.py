@@ -80,7 +80,7 @@ class VolumeAnalyzer:
             result = cls.add_holiday_ext_info(result)
 
         # 分类
-        result = result.groupby(by = class_cols, as_index=False).size()
+        result = result.groupby(by = class_cols, as_index=True, observed=True).size()
         result = result.reset_index()
         result.rename(columns={0: Columns.OutpatientVol}, inplace=True)
 

@@ -109,6 +109,7 @@ class Main_GUI():
             self.__plot(col1, col2, age_bins)
 
 
+
         stat_conf_window = Toplevel()
         stat_conf_window.title('分组统计配置')
         stat_conf_window.geometry('550x100')
@@ -248,6 +249,10 @@ class Main_GUI():
         confirm_button.grid(column=1, row=6, padx=8, pady=4)
 
     def __init_config(self):
+        '''
+        Menu中的配置信息
+        :return:
+        '''
         def confirm_button_click():
             focused_fields = edit_box1.get()
             is_filter = True if cb_isfilter_v.get() else False
@@ -255,7 +260,7 @@ class Main_GUI():
             self.__profile.is_filter = is_filter
             config.Config.store(self.__profile)
             config_window.destroy()
-            
+
         config_window = Toplevel()
         config_window.title('系统配置')
         config_window.geometry('450x250')
@@ -267,7 +272,7 @@ class Main_GUI():
         edit_box1.grid(column=1, row=0, padx=8, pady=4)
 
         cb_isfilter_v = IntVar()
-        cb_isfilter = Checkbutton(config_window, text="TF-IDF",
+        cb_isfilter = Checkbutton(config_window, text="是否过滤看病、取药的数据",
                                variable=cb_isfilter_v, onvalue=1, offvalue=0)
         cb_isfilter.select()
         cb_isfilter.grid(column=0, row=2, padx=8, pady=4)
