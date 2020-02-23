@@ -81,7 +81,7 @@ class VolumeAnalyzer:
 
         # 分类
         result = result.groupby(by = class_cols, as_index=True, observed=True).size()
-        result = result.reset_index()
+        result = result.reset_index(drop=False)
         result.rename(columns={0: Columns.OutpatientVol}, inplace=True)
 
         return result
